@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Selling Web</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        
+        .car-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .car-card {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .car-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Car Selling Web</h1>
+    <form id="car-form">
+        <label for="car-name">Car Name:</label>
+        <input type="text" id="car-name" name="car-name" required><br><br>
+        <label for="car-price">Car Price:</label>
+        <input type="currency" id="car-price" name="car-price" required><br><br>
+        <label for="car-photo">Car Photo:</label>
+        <input type="file" id="car-photo" name="car-photo" accept="image/*" required><br><br>
+        <button type="submit">Add Car</button>
+    </form>
+    
+    <input type="search" id="search-input" placeholder="Search cars...">`
+    
+    <div class="car-list" id="car-list"></div>
+
+    <script>
+        let db;
+        const carForm = document.getElementById('car-form');
+        const carList = document.getElementById('car-list');
+
+        // Open IndexedDB database
+        const request = indexedDB.open('carDB', 1);
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            const objectStore = db.createObjectStore('cars', { keyPath: 'id', autoIncrement: true });
+            objectStore.createIndex('name', 'name');
+            objectStore.createIndex('price', 'price');
+            objectStore.createIndex('photo', 'photo');
+        };
+
+        request.onsuccess = () => {
+            db = request.result;
+            displayCars();
+        };
+
+        request.onerror = (e) => {
+            console.error('Error opening database:', e);
+        };
+
+        // Add car to database
+        carForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const carName = document.getElementById('car-name').value;
+            const carPrice = document.getElementById('car-price').value;
+            const carPhoto = document.getElementById('car-photo').files[0];
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                const car = {
+                    name: carName,
+                    price: carPrice,
+                    photo: reader.result
+                };
+
+                const transaction = db.transaction(['cars'], 'readwrite');
+                const objectStore = transaction.objectStore('cars');
+                const request = objectStore.add(car);
+                request.onsuccess = () => {
+                    displayCars();
+                    carForm.reset();
+                };
+            };
+            reader.readAsDataURL(carPhoto);
+        });
+
+        // Display cars
+        function displayCars() {
+            carList.innerHTML = '';
+            const transaction = db.transaction(['cars'], 'readonly');
+            const objectStore = transaction.objectStore('cars');
+            const request = objectStore.getAll();
+            request.onsuccess = () => {
+                const cars = request.result;
+                cars.forEach((car) => {
+                    const carCard = document.createElement('div');
+                    carCard.classList.add('car-card');
+                    carCard.innerHTML = `
+                        <img class="car-image" src="${car.photo}" alt="${car.name}">
+                        <h2>${car.name}</h2>
+                        <p>Price: ${car.price}</p>
+                    `;
+                    carList.appendChild(carCard);
+                });
+            };
+        }
+        
+        //search car
+        
+        document.getElementById('search-input').addEventListener('input', searchCars);
+        function searchCars() { const searchValue = document.getElementById('search-input').value.toLowerCase(); 
+        const cars = document.querySelectorAll('.car-card'); cars.forEach((car) => { const carName = car.querySelector('h2').textContent.toLowerCase(); 
+        if (carName.includes(searchValue)) { car.style.display = 'block'; } 
+        else { car.style.display = 'none'; } }); };
+        
+        
+        </script>
+</body>
+</html>

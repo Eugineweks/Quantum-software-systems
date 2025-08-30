@@ -1,0 +1,224 @@
+<?php
+session_start();
+include '../assets/constant/config.php';
+
+try {
+  $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $password);
+  $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+  echo "Connection failed: " . $e->getMessage();
+}
+?>
+<?php include('include/sidebar.php'); ?>
+
+<?php include('include/header.php'); ?>
+
+<!--  connect author at mdkhairnar92@gmail.com  -->
+
+<div class="page-content-wrapper ">
+
+  <div class="container-fluid">
+
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="page-title-box">
+          <div class="btn-group float-right">
+
+
+          </div>
+          <h4 class="page-title">Add Asset</h4>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+    <!-- end page title end breadcrumb -->
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+
+            <div class="tab-content">
+
+              <div class="tab-pane active p-3" id="home" role="tabpanel">
+                <form name="myform" action="app/asset_crud.php" class="row" method="POST" enctype="multipart/form-data" onsubmit="return validation()" id="add_service">
+
+                  
+<div class="form-group col-md-6">
+                              <label for="id_label_multiple">Branch<span class="text-danger">*</span> </label>
+                              <select class="form-control postName select2" aria-label="Default select example" type="text" name="branch" >
+                              <option value="">Select branch</option>
+                               <?php    
+                                $sql1=$conn->prepare("select * from `branch` where delete_status='0' ");
+                                $sql1->execute();
+                                $row1=$sql1->fetchAll();
+                                //print_r($row);
+                                //exit;
+                                foreach ($row1 as $key1) {?>
+                                <option value="<?php echo $key1['branch_name'];?> ">
+                                       <?php echo $key1['branch_name'];?>
+                                        </option>
+                                    <?php } ?>
+                              </select>
+                           </div>
+                    <div class="form-group col-md-6">
+                              <label for="id_label_multiple">asset type<span class="text-danger">*</span> </label>
+                              <select class="form-control postName select2" aria-label="Default select example" type="text" name="assettype" >
+                              <option value="">Select </option>
+                               <?php    
+                                $sql1=$conn->prepare("select * from `assettype` where delete_status='0' ");
+                                $sql1->execute();
+                                $row1=$sql1->fetchAll();
+                                //print_r($row);
+                                //exit;
+                                foreach ($row1 as $key1) {?>
+                                <option value="<?php echo $key1['name'];?> ">
+                                       <?php echo $key1['name'];?>
+                                        </option>
+                                    <?php } ?>
+                              </select>
+                           </div>
+
+<div class="container">
+    <table id="dataTable" class="table table-bordered">
+        <thead>
+            <tr>
+               
+                <th>Date of Valuation</th>
+                <th>Value Amount</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+
+                <td><input type="date" name="valuation_date[]" class="form-control"></td>
+                <td><input type="text" name="value_amount[]" class="form-control"></td>
+                <td><button class="btn btn-success addRow" type="button">Add Row</button></td>
+               
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+ <div class="form-group col-md-6">
+                    <label class="control-label">purchase date</label>
+                    <input class="form-control" type="date" name="purchase_date">
+                  </div>
+
+                         </div>
+                   <div class="form-group col-md-6">
+                    <label class="control-label">Purchase Price</label>
+                    <input class="form-control" type="price" name="purchase_price">
+                  </div>
+                   <div class="form-group col-md-6">
+                    <label class="control-label">replacement value</label>
+                    <input class="form-control" type="value" name="replace_value">
+                  </div>
+                  </div>
+                  
+                  <div class="form-group col-md-6">
+                    <label class="control-label">Files doc, pdf, image<span class="text-danger">*(file size must be less than 500 x 400 pixel)</span></label>
+                    <input class="form-control" type="file" name="photo1" accept=".doc,.docx">
+                  </div>
+
+
+</div>
+
+ <div class="form-group col-md-12">
+
+                    <button class="btn btn-primary" type="submit" name="submit" onclick="addService()">Save</button>
+
+                  </div>
+                </form>
+              </div>
+
+
+            </div>
+
+          </div>
+        </div><!--end card-->
+      </div><!--end col-->
+    </div><!--end row-->
+  </div> <!-- Page content Wrapper -->
+</div> <!-- content -->
+
+<?php include('include/footer.php'); ?>
+<!--  Author Name: Mayuri K. 
+ for any PHP, Codeignitor or Laravel website or software development contact me at mayuri.infospace@gmail.com  -->
+
+
+<script>
+    function validation() {
+        var fileInput = document.getElementById('add_service').photo1;
+        var filePath = fileInput.value;
+        var allowedExtensions = /\.(jpg|jpeg|png|docx|pdf)$/i;
+
+        if (!allowedExtensions.test(filePath)) {
+            alert('Invalid file type! Please upload a JPG, JPEG, PNG, DOCx, or PDF file.');
+            fileInput.value = '';
+            return false;
+        }
+        return true;
+    }
+</script>
+<script>
+function addService() {
+    jQuery.validator.addMethod("alphanumeric", function(value, element) {
+        return this.optional(element) || /^(?=.[a-zA-Z])[a-zA-Z0-9\s!@#$%^&()_-]+$/.test(value);
+    }, "Please enter alphanumeric characters only");
+
+    jQuery.validator.addMethod("lettersonly", function(value, element) {
+        return this.optional(element) || /^[a-zA-Z\s]*$/.test(value);
+    }, "Please enter alphabet characters only");
+
+    $('#add_service').validate({
+        rules: {
+            branch: {
+                required: true,
+                alphanumeric: true
+            },
+            assettype: {
+                required: true
+            },
+            'valuation_date[]': {
+                required: true
+            },
+            'value_amount[]': {
+                required: true
+            },
+            purchase_date: {
+                required: true
+            },
+            purchase_price: {
+                required: true
+            },
+            replace_value: {
+                required: true
+            },
+            photo1: {
+                required: true
+            }
+        },
+        messages: {
+            branch: {
+                required: "Please select branch",
+                alphanumeric: "Only alphanumeric characters are allowed"
+            },
+            'valuation_date[]': {
+                required: "Please enter valuation date"
+            },
+            'value_amount[]': {
+                required: "Please enter value amount"
+            }
+        },
+        errorPlacement: function(error, element) {
+            if (element.attr("name").indexOf("[]") !== -1) {
+                error.insertAfter(element.closest(".form-group").find("input").last());
+            } else {
+                error.insertAfter(element);
+            }
+        }
+    });
+}
+</script>
